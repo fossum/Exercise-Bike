@@ -1,5 +1,33 @@
 #include "potentiometer.h"
 
+namespace {
+int defaultReadRaw(uint8_t pin) {
+#ifdef ARDUINO
+  return analogRead(pin);
+#else
+  (void)pin;
+  return 0;
+#endif
+}
+
+int defaultReadMilliVolts(uint8_t pin) {
+#ifdef ARDUINO
+  return analogReadMilliVolts(pin);
+#else
+  (void)pin;
+  return 0;
+#endif
+}
+
+void defaultDelay(uint32_t ms) {
+#ifdef ARDUINO
+  delay(ms);
+#else
+  (void)ms;
+#endif
+}
+} // namespace
+
 PotentiometerReading::PotentiometerReading(int raw, int millivolts, int minRaw, int maxRaw)
     : raw_(raw), millivolts_(millivolts), minRaw_(minRaw), maxRaw_(maxRaw) {}
 
@@ -44,11 +72,16 @@ Potentiometer::Potentiometer(uint8_t pin,
       sampleDelayMs_(sampleDelayMs),
       minRaw_(minRaw),
       maxRaw_(maxRaw),
-      resolutionBits_(resolutionBits) {}
+      resolutionBits_(resolutionBits),
+      rawReader_(defaultReadRaw),
+      mvReader_(defaultReadMilliVolts),
+      delayFn_(defaultDelay) {}
 
 void Potentiometer::begin() {
+#ifdef ARDUINO
   pinMode(pin_, INPUT);
   analogReadResolution(resolutionBits_);
+#endif
 }
 
 PotentiometerReading Potentiometer::read() const {
@@ -56,10 +89,10 @@ PotentiometerReading Potentiometer::read() const {
   long mvSum = 0;
 
   for (int i = 0; i < samples_; i++) {
-    rawSum += analogRead(pin_);
-    mvSum += analogReadMilliVolts(pin_);
-    if (sampleDelayMs_ > 0) {
-      delay(sampleDelayMs_);
+    rawSum += rawReader_ ? rawReader_(pin_) : 0;
+    mvSum += mvReader_ ? mvReader_(pin_) : 0;
+    if (sampleDelayMs_ > 0 && delayFn_) {
+      delayFn_(sampleDelayMs_);
     }
   }
 
@@ -84,4 +117,10 @@ int Potentiometer::getMaxRaw() const {
 
 int Potentiometer::getMaxAdcValue() const {
   return (1 << resolutionBits_) - 1;
+}
+
+void Potentiometer::setHardwareReaders(AdcReadFn rawReader, AdcReadFn mvReader, DelayFn delayFn) {
+  rawReader_ = rawReader ? rawReader : defaultReadRaw;
+  mvReader_ = mvReader ? mvReader : defaultReadMilliVolts;
+  delayFn_ = delayFn;
 }

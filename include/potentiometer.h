@@ -1,7 +1,14 @@
 #ifndef POTENTIOMETER_H
 #define POTENTIOMETER_H
 
+#ifdef ARDUINO
 #include <Arduino.h>
+#else
+#include <stdint.h>
+#ifndef INPUT
+#define INPUT 0x01
+#endif
+#endif
 
 class PotentiometerReading {
 public:
@@ -22,6 +29,9 @@ private:
 
 class Potentiometer {
 public:
+  using AdcReadFn = int (*)(uint8_t pin);
+  using DelayFn = void (*)(uint32_t ms);
+
   explicit Potentiometer(uint8_t pin,
                          int samples = 16,
                          uint32_t sampleDelayMs = 2,
@@ -37,6 +47,8 @@ public:
   int getMaxRaw() const;
   int getMaxAdcValue() const;
 
+  void setHardwareReaders(AdcReadFn rawReader, AdcReadFn mvReader, DelayFn delayFn = nullptr);
+
 private:
   uint8_t pin_;
   int samples_;
@@ -44,6 +56,9 @@ private:
   int minRaw_;
   int maxRaw_;
   uint8_t resolutionBits_;
+  AdcReadFn rawReader_;
+  AdcReadFn mvReader_;
+  DelayFn delayFn_;
 };
 
 #endif // POTENTIOMETER_H

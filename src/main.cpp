@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "potentiometer.h"
 
+#ifndef PIO_UNIT_TESTING
+
 // Change this to whichever ADC pin (GPIO 0 through 6) has your wiper wire
 const uint8_t POT_PIN = 4;
 
@@ -27,3 +29,5 @@ void loop() {
 
   delay(200);
 }
+
+#endif // PIO_UNIT_TESTING
