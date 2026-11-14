@@ -8,12 +8,13 @@ static const int8_t ENC_STATES[16] DRAM_ATTR = {
      0,  1, -1,  0
 };
 
-RotaryEncoder::RotaryEncoder(int pinA, int pinB, int pinSW, int minLevel, int maxLevel)
+RotaryEncoder::RotaryEncoder(int pinA, int pinB, int pinSW, int minLevel, int maxLevel, int stepsPerClick)
     : _pinA(pinA),
       _pinB(pinB),
       _pinSW(pinSW),
       _minLevel(minLevel),
       _maxLevel(maxLevel),
+      _stepsPerClick(stepsPerClick > 0 ? stepsPerClick : 1),
       _level(minLevel),
       _subStepAccum(0),
       _prevState(0),
@@ -56,14 +57,13 @@ void IRAM_ATTR RotaryEncoder::handleInterrupt() {
     if (delta != 0) {
         _subStepAccum = _subStepAccum + delta;
 
-        // Most detent encoders produce 4 transitions per click (change 4 to 2 if half-step)
-        if (_subStepAccum >= 4) {
+        if (_subStepAccum >= _stepsPerClick) {
             _subStepAccum = 0;
             if (_level < _maxLevel) {
                 _level = _level + 1;
                 _changed = true;
             }
-        } else if (_subStepAccum <= -4) {
+        } else if (_subStepAccum <= -_stepsPerClick) {
             _subStepAccum = 0;
             if (_level > _minLevel) {
                 _level = _level - 1;

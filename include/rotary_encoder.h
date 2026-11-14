@@ -23,13 +23,14 @@
 class RotaryEncoder {
 public:
     /**
-     * @param pinA     GPIO pin for Encoder Phase A (CLK)
-     * @param pinB     GPIO pin for Encoder Phase B (DT)
-     * @param pinSW    GPIO pin for Push Button (pass -1 if not wired)
-     * @param minLevel Minimum resistance level (default 1)
-     * @param maxLevel Maximum resistance level (default 32)
+     * @param pinA          GPIO pin for Encoder Phase A (CLK)
+     * @param pinB          GPIO pin for Encoder Phase B (DT)
+     * @param pinSW         GPIO pin for Push Button (pass -1 if not wired)
+     * @param minLevel      Minimum resistance level (default 1)
+     * @param maxLevel      Maximum resistance level (default 32)
+     * @param stepsPerClick Quadrature state transitions per detent click (default 1)
      */
-    RotaryEncoder(int pinA, int pinB, int pinSW = -1, int minLevel = 1, int maxLevel = 32);
+    RotaryEncoder(int pinA, int pinB, int pinSW = -1, int minLevel = 1, int maxLevel = 32, int stepsPerClick = 1);
 
     void begin();
 
@@ -51,6 +52,7 @@ private:
     int _pinSW;
     int _minLevel;
     int _maxLevel;
+    int _stepsPerClick;
 
     volatile int _level;
     volatile int _subStepAccum;
