@@ -1,7 +1,8 @@
 #ifdef ARDUINO
 #include <Arduino.h>
-#include "potentiometer.h"
+#include "echelon_ble.h"
 #include "motor.h"
+#include "potentiometer.h"
 #include "rotary_encoder.h"
 
 #ifndef PIO_UNIT_TESTING
@@ -20,8 +21,9 @@ const int MIN_SAFE_ADC = 400;
 const int MAX_SAFE_ADC = 3000;
 const int ADC_DEADBAND = 25; // Tolerance window to prevent motor hunting/oscillation
 
-Potentiometer pot(POT_PIN, 16, 0, MIN_SAFE_ADC, MAX_SAFE_ADC, 12);
+EchelonBLE bikeBle("ECHEX-5s-109843");
 Motor motor(PIN_AIN1, PIN_AIN2);
+Potentiometer pot(POT_PIN, 16, 0, MIN_SAFE_ADC, MAX_SAFE_ADC, 12);
 RotaryEncoder encoder(ENC_PIN_A, ENC_PIN_B, ENC_PIN_SW, 1, 32);
 
 int targetADC = MIN_SAFE_ADC;
@@ -47,6 +49,11 @@ void setup() {
     encoder.hasChanged(); // Clear initial change flag
     targetADC = levelToTargetADC(initialLevel);
 
+    bikeBle.onTargetResistanceChanged([](int newLevel) {
+        encoder.setLevel(newLevel); // Sync encoder state & trigger motor move in loop()
+    });
+    bikeBle.begin();
+
     Serial.println("\n--- Exercise Bike Resistance Controller ---");
     Serial.printf("Initial Level: %2d / 32  |  Pot ADC: %4d  |  Target ADC: %4d\n",
                   initialLevel, initialADC, targetADC);
@@ -65,6 +72,9 @@ void loop() {
 
         Serial.printf("Resistance Level: %2d / 32  |  Target ADC: %4d\n", level, targetADC);
     }
+
+    // Update tablet display.
+    bikeBle.update(encoder.getLevel(), 0);
 
     // 2. Check for Serial commands ('f', 'r', 's') for manual override
     if (Serial.available() > 0) {
