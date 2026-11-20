@@ -6,9 +6,12 @@
 
 #ifndef PIO_UNIT_TESTING
 
-const uint8_t POT_PIN  = 4;  // Working potentiometer ADC pin
+const uint8_t POT_PIN  = 2;  // Working potentiometer ADC pin
 const uint8_t PIN_AIN1 = 19; // Swapped so Forward ('f') increases Pot ADC
-const uint8_t PIN_AIN2 = 18; // and Reverse ('r') decreases Pot ADC
+const uint8_t PIN_AIN2 = 20; // and Reverse ('r') decreases Pot ADC
+const uint8_t PIN_PWM  = 21; // H-bridge PWM speed control pin
+const uint8_t PIN_STBY = 7;  // H-bridge standby pin (HIGH = enabled, LOW = standby)
+const float MOTOR_SPEED_PERCENT = 80.0f;
 
 // Safe GPIO pins on ESP32-C6 (avoid GPIO 8 which is onboard RGB LED)
 const uint8_t ENC_PIN_A  = 6;
@@ -20,6 +23,7 @@ const int MIN_SAFE_ADC = 400;
 const int MAX_SAFE_ADC = 3000;
 const int ADC_DEADBAND = 25; // Tolerance window to prevent motor hunting/oscillation
 
+Motor motor(PIN_AIN1, PIN_AIN2, PIN_PWM, 8, PIN_STBY);
 Potentiometer pot(POT_PIN, 16, 0, MIN_SAFE_ADC, MAX_SAFE_ADC, 12);
 Motor motor(PIN_AIN1, PIN_AIN2);
 RotaryEncoder encoder(ENC_PIN_A, ENC_PIN_B, ENC_PIN_SW, 1, 32);
@@ -71,7 +75,7 @@ void loop() {
         char c = static_cast<char>(Serial.read());
         if (c == 'f' || c == 'r' || c == 's') {
             autoControlEnabled = false;
-            motor.setModeChar(c);
+            motor.setModeChar(c, MOTOR_SPEED_PERCENT);
             Serial.printf("Manual override: '%c'\n", c);
         }
     }
@@ -82,9 +86,9 @@ void loop() {
         if (abs(error) <= ADC_DEADBAND) {
             motor.stop();
         } else if (error > 0 && adc < MAX_SAFE_ADC) {
-            motor.forward();
+            motor.forward(MOTOR_SPEED_PERCENT);
         } else if (error < 0 && adc > MIN_SAFE_ADC) {
-            motor.reverse();
+            motor.reverse(MOTOR_SPEED_PERCENT);
         } else {
             motor.stop();
         }

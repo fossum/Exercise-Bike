@@ -56,6 +56,9 @@ void test_motor_initial_and_begin_state(void) {
   TEST_ASSERT_EQUAL_UINT8(19, motor.getAin2Pin());
   TEST_ASSERT_EQUAL_INT(Motor::kNoPwmPin, motor.getPwmPin());
   TEST_ASSERT_FALSE(motor.hasPwmPin());
+  TEST_ASSERT_EQUAL_INT(Motor::kNoStandbyPin, motor.getStandbyPin());
+  TEST_ASSERT_FALSE(motor.hasStandbyPin());
+  TEST_ASSERT_FALSE(motor.isInStandby());
   TEST_ASSERT_EQUAL_INT(static_cast<int>(MotorDirection::Stopped),
                         static_cast<int>(motor.getDirection()));
   TEST_ASSERT_EQUAL_CHAR('s', motor.getModeChar());
@@ -175,6 +178,58 @@ void test_motor_mode_char_helper(void) {
   TEST_ASSERT_EQUAL_INT(0, mockAnalogValues[20]);
 }
 
+void test_motor_standby_pin_control(void) {
+  Motor motor(19, 18, 20, 8, 7);
+  motor.setHardwareWriters(mockDigitalWrite, mockAnalogWrite, mockPinMode);
+
+  TEST_ASSERT_TRUE(motor.hasPwmPin());
+  TEST_ASSERT_EQUAL_INT(20, motor.getPwmPin());
+  TEST_ASSERT_TRUE(motor.hasStandbyPin());
+  TEST_ASSERT_EQUAL_INT(7, motor.getStandbyPin());
+  TEST_ASSERT_TRUE(motor.isInStandby());
+
+  motor.begin();
+  TEST_ASSERT_EQUAL_INT(4, pinModeCallCount);
+  TEST_ASSERT_EQUAL_INT(OUTPUT, mockPinModes[19]);
+  TEST_ASSERT_EQUAL_INT(OUTPUT, mockPinModes[18]);
+  TEST_ASSERT_EQUAL_INT(OUTPUT, mockPinModes[20]);
+  TEST_ASSERT_EQUAL_INT(OUTPUT, mockPinModes[7]);
+  TEST_ASSERT_EQUAL_INT(0, mockAnalogValues[20]);
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[7]);
+  TEST_ASSERT_TRUE(motor.isInStandby());
+
+  motor.forward(80.0f);
+  TEST_ASSERT_EQUAL_INT(HIGH, mockDigitalValues[19]);
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[18]);
+  TEST_ASSERT_EQUAL_INT(204, mockAnalogValues[20]);
+  TEST_ASSERT_EQUAL_INT(HIGH, mockDigitalValues[7]);
+  TEST_ASSERT_FALSE(motor.isInStandby());
+
+  motor.reverse(80.0f);
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[19]);
+  TEST_ASSERT_EQUAL_INT(HIGH, mockDigitalValues[18]);
+  TEST_ASSERT_EQUAL_INT(204, mockAnalogValues[20]);
+  TEST_ASSERT_EQUAL_INT(HIGH, mockDigitalValues[7]);
+  TEST_ASSERT_FALSE(motor.isInStandby());
+
+  motor.stop();
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[19]);
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[18]);
+  TEST_ASSERT_EQUAL_INT(0, mockAnalogValues[20]);
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[7]);
+  TEST_ASSERT_TRUE(motor.isInStandby());
+
+  motor.setModeChar('f', 80.0f);
+  TEST_ASSERT_EQUAL_INT(204, mockAnalogValues[20]);
+  TEST_ASSERT_EQUAL_INT(HIGH, mockDigitalValues[7]);
+  TEST_ASSERT_FALSE(motor.isInStandby());
+
+  motor.setSpeedPercent(0.0f);
+  TEST_ASSERT_EQUAL_INT(0, mockAnalogValues[20]);
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[7]);
+  TEST_ASSERT_TRUE(motor.isInStandby());
+}
+
 #ifdef ARDUINO
 void test_hardware_motor_pins(void) {
   Motor motor(18, 19);
@@ -201,6 +256,7 @@ int runUnityTests(void) {
   RUN_TEST(test_motor_forward_reverse_stop_digital);
   RUN_TEST(test_motor_pwm_speed_and_clamping);
   RUN_TEST(test_motor_mode_char_helper);
+  RUN_TEST(test_motor_standby_pin_control);
 #ifdef ARDUINO
   RUN_TEST(test_hardware_motor_pins);
 #endif
