@@ -13,6 +13,7 @@ int mockAnalogValues[kMaxTrackedPins];
 int pinModeCallCount = 0;
 int digitalWriteCallCount = 0;
 int analogWriteCallCount = 0;
+bool sawBothDirectionPinsHigh = false;
 
 void mockPinMode(uint8_t pin, uint8_t mode) {
   if (pin < kMaxTrackedPins) {
@@ -24,6 +25,9 @@ void mockPinMode(uint8_t pin, uint8_t mode) {
 void mockDigitalWrite(uint8_t pin, uint8_t val) {
   if (pin < kMaxTrackedPins) {
     mockDigitalValues[pin] = val;
+  }
+  if (mockDigitalValues[PIN_AIN1] == HIGH && mockDigitalValues[PIN_AIN2] == HIGH) {
+    sawBothDirectionPinsHigh = true;
   }
   digitalWriteCallCount++;
 }
@@ -45,6 +49,7 @@ void setUp(void) {
   pinModeCallCount = 0;
   digitalWriteCallCount = 0;
   analogWriteCallCount = 0;
+  sawBothDirectionPinsHigh = false;
 }
 
 void tearDown(void) {}
@@ -303,6 +308,44 @@ void test_motor_skips_redundant_output_writes(void) {
   TEST_ASSERT_EQUAL_INT(7, analogWriteCallCount);
 }
 
+void test_motor_edge_cases_and_safe_reversal(void) {
+  // 1. Standby without PWM (digital-only mode with standby pin) & zero pwmResolutionBits fallback to 8-bit
+  Motor digitalStandbyMotor(PIN_AIN1, PIN_AIN2, Motor::kNoPwmPin, 0, PIN_STBY);
+  digitalStandbyMotor.setHardwareWriters(mockDigitalWrite, mockAnalogWrite, mockPinMode);
+  TEST_ASSERT_FALSE(digitalStandbyMotor.hasPwmPin());
+  TEST_ASSERT_TRUE(digitalStandbyMotor.hasStandbyPin());
+  TEST_ASSERT_EQUAL_INT(255, digitalStandbyMotor.getMaxPwmValue());
+
+  digitalStandbyMotor.begin();
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[PIN_STBY]);
+  TEST_ASSERT_EQUAL_INT(0, analogWriteCallCount);
+
+  digitalStandbyMotor.forward(100.0f);
+  TEST_ASSERT_EQUAL_INT(HIGH, mockDigitalValues[PIN_STBY]);
+  TEST_ASSERT_EQUAL_INT(0, analogWriteCallCount);
+
+  // 2. forward(0.0f) while running transitions to Stopped + standby LOW
+  digitalStandbyMotor.forward(0.0f);
+  TEST_ASSERT_FALSE(digitalStandbyMotor.isRunning());
+  TEST_ASSERT_TRUE(digitalStandbyMotor.isInStandby());
+  TEST_ASSERT_EQUAL_INT(LOW, mockDigitalValues[PIN_STBY]);
+
+  // 3. Direct Reverse -> Forward transition never transiently drives both AIN1 and AIN2 HIGH
+  sawBothDirectionPinsHigh = false;
+  digitalStandbyMotor.reverse(100.0f);
+  digitalStandbyMotor.forward(100.0f);
+  digitalStandbyMotor.reverse(100.0f);
+  TEST_ASSERT_FALSE(sawBothDirectionPinsHigh);
+
+  // 4. Custom 10-bit PWM resolution and nullptr writer fallback
+  Motor pwm10Motor(PIN_AIN1, PIN_AIN2, PIN_PWM, 10);
+  TEST_ASSERT_EQUAL_INT(1023, pwm10Motor.getMaxPwmValue());
+  pwm10Motor.setHardwareWriters(nullptr, nullptr, nullptr);
+  pwm10Motor.begin();
+  pwm10Motor.forward(50.0f);
+  TEST_ASSERT_EQUAL_INT(512, pwm10Motor.getPwmValue());
+}
+
 #ifdef ARDUINO
 void test_hardware_motor_pins(void) {
   Motor motor(PIN_AIN1, PIN_AIN2, PIN_PWM, 8, PIN_STBY);
@@ -331,6 +374,7 @@ int runUnityTests(void) {
   RUN_TEST(test_motor_mode_char_helper);
   RUN_TEST(test_motor_standby_pin_control);
   RUN_TEST(test_motor_skips_redundant_output_writes);
+  RUN_TEST(test_motor_edge_cases_and_safe_reversal);
 #ifdef ARDUINO
   RUN_TEST(test_hardware_motor_pins);
 #endif

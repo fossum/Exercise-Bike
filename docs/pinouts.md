@@ -7,25 +7,25 @@ the pin-socket with the notches facing you.
 
 ### 9-Pin Connector
 
-| Signal | Board Pin | Description |
-| --- | --- | --- |
-| Motor Positive | Motor A+ (on H-bridge) | The positive driver for the resistance motor. |
-| Motor Negative | Motor A- (on H-bridge) | The negative driver for the resistance motor. |
-| Potentiometer Ground | Ground | The ground pin for the potentiometer. |
-| Potentiometer Signal | ADC Pin | The signal return from the potentiometer. |
-| Potentiometer Vcc | 3.3V rail | The power source for the potentiometer. |
-| Cadence Signal? | w/interrupt | |
-| Cadence Ground? | Ground | |
-| +12V DC | 12V rail | The supply from the bike's 12 volt power brick. |
-| 12V GND | Ground | The supply return from the bike's power brick. |
+| Pin | Signal | Board Pin | Description |
+| --- | --- | --- | --- |
+| 1 | Motor Positive | Motor A+ (on H-bridge) | The positive driver for the resistance motor. |
+| 2 | Motor Negative | Motor A- (on H-bridge) | The negative driver for the resistance motor. |
+| 3 | Potentiometer Ground | Ground | The ground pin for the potentiometer. |
+| 4 | Potentiometer Signal | ADC Pin | The signal return from the potentiometer. |
+| 5 | Potentiometer Vcc | 3.3V rail | The power source for the potentiometer. |
+| 6 | Cadence Signal? | GPIO w/interrupt | Reed switch pulse input w/interrupt. |
+| 7 | Cadence Ground? | Ground | The cadence sensor's ground return. |
+| 8 | +12V DC | 12V rail | The supply from the bike's 12 volt power brick. |
+| 9 | 12V GND | Ground | The supply return from the bike's power brick. |
 
 ### 3-Pin Encoder Connector
 
-| Signal | Board Pin | Description |
-| --- | --- | --- |
-| Signal A | GPIO w/interrupt | |
-| Signal B | GPIO w/interrupt | |
-| Ground | Ground | The sensor's ground return. |
+| Pin | Signal | Board Pin | Description |
+| --- | --- | --- | --- |
+| 1 | Signal A | GPIO w/interrupt | Quadrature Phase A (`CLK`) GPIO w/interrupt. |
+| 2 | Signal B | GPIO w/interrupt | Quadrature Phase B (`DT`) GPIO w/interrupt. |
+| 3 | Ground | Ground | The sensor's ground return. |
 
 ## Target Board
 
@@ -40,13 +40,13 @@ the pin-socket with the notches facing you.
 | GPIO | Code Constant | Device / Subsystem | Signal / Function | Mode | Notes |
 | --- | --- | --- | --- | --- | --- |
 | `GPIO 2` | `POT_PIN` | Resistance Potentiometer | Wiper (ADC1) | `INPUT` (12-bit ADC) | 3.3V max (power pot from 3V3, not 5V); safe range 400–3000 raw ADC |
+| `GPIO 4` | `CADENCE_PIN` | Cadence Sensor *(planned)* | Reed Switch Pulse | `INPUT_PULLUP` | Defined in `include/pins.h`; hardware interrupt (`FALLING`) to GND; debounce in code to compute RPM |
 | `GPIO 5` | `ENC_PIN_B` | Rotary Encoder | Phase B (`DT`) | `INPUT_PULLUP` | Hardware interrupt (`CHANGE`) |
 | `GPIO 6` | `ENC_PIN_A` | Rotary Encoder | Phase A (`CLK`) | `INPUT_PULLUP` | Hardware interrupt (`CHANGE`) |
+| `GPIO 7` | `PIN_STBY` | Resistance Motor Driver | Standby | `OUTPUT` | Drive `HIGH` (3.3V) to enable H-bridge; `LOW` (0V) to standby when idle |
 | `GPIO 19` | `PIN_AIN2` | Resistance Motor Driver | `AIN2` | `OUTPUT` | Active `HIGH` for Reverse (decreases Pot ADC) |
 | `GPIO 20` | `PIN_AIN1` | Resistance Motor Driver | `AIN1` | `OUTPUT` | Active `HIGH` for Forward (increases Pot ADC) |
 | `GPIO 21` | `PIN_PWM` | Resistance Motor Driver | `PWM` | `OUTPUT` | 8-bit PWM speed control (currently set to 80% speed) |
-| `GPIO 4` | `CADENCE_PIN` | Cadence Sensor | Reed Switch Pulse | INPUT_PULLUP | Hardware interrupt (FALLING) to GND; debounce in code to compute RPM. |
-| `GPIO 7` | `PIN_STBY` | Resistance Motor Driver | Standby | OUTPUT | Drive HIGH (3.3V) to enable H-bridge; LOW (0V) to standby when idle. |
 
 ---
 
@@ -73,11 +73,11 @@ the pin-socket with the notches facing you.
 
 `PIN_AIN1` and `PIN_AIN2` are assigned so that `Forward` increases the potentiometer ADC reading and `Reverse` decreases it:
 
-| Mode | Serial Command | `PIN_AIN1` (`GPIO 20`) | `PIN_AIN2` (`GPIO 19`) | `PIN_STBY` (`GPIO 7`) | Effect |
-| --- | --- | --- | --- | --- | --- |
-| `Forward` | `'f'` | `HIGH` | `LOW` | `HIGH` | Increases Pot ADC (higher resistance) |
-| `Reverse` | `'r'` | `LOW` | `HIGH` | `HIGH` | Decreases Pot ADC (lower resistance) |
-| `Stopped` | `'s'` | `LOW` | `LOW` | `LOW` | Motor stopped (H-bridge in standby) |
+| Mode | Serial Command | `PIN_AIN1` (`GPIO 20`) | `PIN_AIN2` (`GPIO 19`) | `PIN_PWM` (`GPIO 21`) | `PIN_STBY` (`GPIO 7`) | Effect |
+| --- | --- | --- | --- | --- | --- | --- |
+| `Forward` | `'f'` | `HIGH` | `LOW` | `80%` (`204`) | `HIGH` | Increases Pot ADC (higher resistance) |
+| `Reverse` | `'r'` | `LOW` | `HIGH` | `80%` (`204`) | `HIGH` | Decreases Pot ADC (lower resistance) |
+| `Stopped` | `'s'` | `LOW` | `LOW` | `0%` (`0`) | `LOW` | Motor stopped (H-bridge in standby) |
 
 ---
 
@@ -88,3 +88,11 @@ the pin-socket with the notches facing you.
 | Phase A (`CLK`) | `GPIO 6` (`ENC_PIN_A`) | `INPUT_PULLUP`, `CHANGE` interrupt |
 | Phase B (`DT`) | `GPIO 5` (`ENC_PIN_B`) | `INPUT_PULLUP`, `CHANGE` interrupt |
 | Push Button (`SW`) | Not wired (`-1`, `ENC_PIN_SW`) | Optional `INPUT_PULLUP` (active-low, 200 ms debounce) |
+
+---
+
+### 4. Cadence Sensor *(Planned)*
+
+| Signal | ESP32-C6 Pin | Configuration |
+| --- | --- | --- |
+| Reed Switch Pulse | `GPIO 4` (`CADENCE_PIN`) | `INPUT_PULLUP`, `FALLING` interrupt (defined in `include/pins.h`; firmware RPM tracking planned) |

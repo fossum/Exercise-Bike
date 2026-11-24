@@ -7,11 +7,11 @@ Coordinates the potentiometer, motor driver, rotary encoder, and serial interfac
 ## Requirements
 
 ### Requirement: Startup position synchronization
-The resistance controller SHALL read the current physical potentiometer position at startup, clamp it to the safe operating window (`400..3000` raw ADC), map it linearly to a discrete resistance level (`1..32`), synchronize the encoder level and target ADC to that initial level, and clear the initial encoder change event.
+The resistance controller SHALL read the current physical potentiometer position at startup, clamp it to the safe operating window (`400..3000` raw ADC), map it linearly to a discrete resistance level (`1..32`), synchronize the encoder level to that initial level, initialize `targetADC` to the clamped physical ADC position (so integer `map()` quantization does not cause unintended motor movement on boot before the encoder is turned), and clear the initial encoder change event.
 
 #### Scenario: Booting with potentiometer mid-travel
 - **WHEN** the controller boots while the potentiometer reads `1700` raw ADC
-- **THEN** the controller sets the initial resistance level to the corresponding mapped value in `1..32`, sets the target ADC to that level's mapped target, clears the pending change flag, and logs the startup banner with initial level, pot ADC, and target ADC
+- **THEN** the controller sets the initial resistance level to the corresponding mapped value in `1..32`, sets `targetADC` to `1700` (keeping the motor stationary at boot), clears the pending change flag, and logs the startup banner with initial level, pot ADC, and target ADC
 
 #### Scenario: Booting with potentiometer outside safe window
 - **WHEN** the controller boots while the potentiometer reads below `400` or above `3000` raw ADC

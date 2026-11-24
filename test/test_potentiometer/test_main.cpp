@@ -118,6 +118,13 @@ void test_potentiometer_calibration_update(void) {
   PotentiometerReading reading = pot.read();
   TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, reading.getNormalized());
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 50.0f, reading.getPercent());
+  TEST_ASSERT_EQUAL_INT(0, delayCallCount);
+
+  // Non-positive sample count (<= 0) coerces to 1 sample without divide-by-zero
+  Potentiometer zeroSamplePot(POT_PIN, 0, 5, 0, 4095, 12);
+  zeroSamplePot.setHardwareReaders(mockReadRaw, mockReadMv); // default nullptr delayFn falls back safely
+  PotentiometerReading singleReading = zeroSamplePot.read();
+  TEST_ASSERT_EQUAL_INT(1500, singleReading.getRaw());
 }
 
 #ifdef ARDUINO

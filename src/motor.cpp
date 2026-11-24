@@ -213,8 +213,20 @@ void Motor::applyOutput() {
   }
 
   if (digitalWriter_) {
-    digitalWriter_(ain1Pin_, ain1Val);
-    digitalWriter_(ain2Pin_, ain2Val);
+    // Write LOW pins before HIGH pins so Reverse -> Forward transitions never
+    // pass through the (HIGH, HIGH) short-brake state on the H-bridge.
+    if (ain1Val == LOW) {
+      digitalWriter_(ain1Pin_, LOW);
+    }
+    if (ain2Val == LOW) {
+      digitalWriter_(ain2Pin_, LOW);
+    }
+    if (ain1Val == HIGH) {
+      digitalWriter_(ain1Pin_, HIGH);
+    }
+    if (ain2Val == HIGH) {
+      digitalWriter_(ain2Pin_, HIGH);
+    }
   }
 
   if (hasPwmPin() && analogWriter_) {

@@ -33,13 +33,15 @@ void setup() {
     motor.begin();
     encoder.begin();
 
-    // Sync initial encoder level to the current physical potentiometer position
+    // Sync initial encoder level to the current physical potentiometer position.
+    // Set targetADC to clampedADC on boot so integer map() quantization does not
+    // move the motor until the user actually turns the encoder.
     int initialADC = pot.read().getRaw();
     int clampedADC = constrain(initialADC, MIN_SAFE_ADC, MAX_SAFE_ADC);
     int initialLevel = map(clampedADC, MIN_SAFE_ADC, MAX_SAFE_ADC, 1, 32);
     encoder.setLevel(initialLevel);
     encoder.hasChanged(); // Clear initial change flag
-    targetADC = levelToTargetADC(initialLevel);
+    targetADC = clampedADC;
 
     Serial.println("\n--- Exercise Bike Resistance Controller ---");
     Serial.printf("Initial Level: %2d / 32  |  Pot ADC: %4d  |  Target ADC: %4d\n",

@@ -41,7 +41,7 @@ The motor driver capability SHALL support an optional PWM output channel with co
 - **THEN** direction changes succeed using digital outputs only and no analog PWM writes are performed
 
 ### Requirement: Optional H-bridge standby control and sequencing
-The motor driver capability SHALL support an optional active-low standby output that is held `LOW` whenever the motor is stopped and driven `HIGH` whenever the motor is running, de-asserting standby `LOW` before updating direction/PWM on stop and asserting standby `HIGH` after updating direction/PWM on start.
+The motor driver capability SHALL support an optional H-bridge standby (`STBY`, active-low standby / active-high enable) output that is held `LOW` (standby active) whenever the motor is stopped and driven `HIGH` (H-bridge enabled) whenever the motor is running, driving `STBY` `LOW` before updating direction/PWM on stop and driving `STBY` `HIGH` after updating direction/PWM on start.
 
 #### Scenario: Entering and exiting standby around motor motion
 - **WHEN** a standby channel is configured and the motor initializes, runs `Forward` at `80.0%`, then stops
