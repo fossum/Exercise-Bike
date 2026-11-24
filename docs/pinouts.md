@@ -27,6 +27,36 @@ the pin-socket with the notches facing you.
 | 2 | Signal B | GPIO w/interrupt | Quadrature Phase B (`DT`) GPIO w/interrupt. |
 | 3 | Ground | Ground | The sensor's ground return. |
 
+---
+
+## Controller PCB Connectors (`J1`–`J2`)
+
+Connector pinouts for the carrier PCB (`pcb/echelon_ex5s_controller.kicad_sch` / `pcb/echelon_ex5s_controller.kicad_pcb`), using vertical 2.54 mm (0.1 in) pitch headers that match the bike's 9-pin and 3-pin harnesses 1:1.
+
+### `J1` — `Bike_Harness_9P` (`1x09`, `2.54 mm` Pitch)
+
+| Pin | Symbol Pin | PCB Net | Connected To | Description |
+| --- | --- | --- | --- | --- |
+| 1 | `MOT_RED` | `MOT_RED` | `U3` Pin 7 (`MOTA_1`) | Motor Positive (H-bridge channel A output 1). |
+| 2 | `MOT_BLK` | `MOT_BLK` | `U3` Pin 8 (`MOTA_2`) | Motor Negative (H-bridge channel A output 2). |
+| 3 | `POT_GND` | `GND` | Common `GND` | Potentiometer ground return. |
+| 4 | `POT_WIPER` | `POT_WIPER` | `U2` `GPIO 2` (`POT_PIN`), `C3` (`100 nF`) | Potentiometer ADC wiper signal. |
+| 5 | `POT_3V3` | `+3V3` | `U2` `3V3` rail | Potentiometer excitation (`+3V3`, never `+5V`). |
+| 6 | `CADENCE` | `CADENCE` | `U2` `GPIO 4` (`CADENCE_PIN`) | Cadence reed-switch pulse input. |
+| 7 | `CADENCE_GND` | `GND` | Common `GND` | Cadence sensor ground return. |
+| 8 | `VIN_12V` | `+12V` | `U1` Pin 1 (`VIN_12V`) | `+12V` DC power supply from bike power brick. |
+| 9 | `GND_12V` | `GND` | Common `GND` | `12V` DC power supply return ground. |
+
+### `J2` — `Encoder_3P` (`1x03`, `2.54 mm` Pitch)
+
+| Pin | Symbol Pin | PCB Net | Connected To | Description |
+| --- | --- | --- | --- | --- |
+| 1 | `ENC_A` | `ENC_A` | `U2` `GPIO 6` (`ENC_PIN_A`) | Quadrature Phase A (`CLK`). |
+| 2 | `ENC_B` | `ENC_B` | `U2` `GPIO 5` (`ENC_PIN_B`) | Quadrature Phase B (`DT`). |
+| 3 | `GND` | `GND` | Common `GND` | Encoder ground return. |
+
+---
+
 ## Target Board
 
 - **Board:** `esp32-c6-devkitc-1` (ESP32-C6-DevKitC-1)

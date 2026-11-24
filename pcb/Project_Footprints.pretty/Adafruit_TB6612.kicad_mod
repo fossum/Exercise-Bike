@@ -12,7 +12,7 @@
   (pad "6" thru_hole circle (at 7.62 -11.43) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid 9048edd8-ab50-459e-a74d-06832b254ce5))
   (pad "5" thru_hole circle (at 7.62 -8.89) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid 2d6e4c14-4c53-4ce8-8499-165daed42780))
   (pad "4" thru_hole circle (at 7.62 -6.35) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid b413d7f8-7b6b-4c8c-b1db-3e4debb9d5dd))
-  (pad "MP3" thru_hole circle (at 7.62 -3.81) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid 79e99ee7-c20e-4c32-bee7-46c8e137eaf6))
+  (pad "9" thru_hole circle (at 7.62 -3.81) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid 79e99ee7-c20e-4c32-bee7-46c8e137eaf6))
   (pad "MP4" thru_hole circle (at 7.62 -1.27) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid 3fbc150f-4b46-4ad0-9045-06da5945e6f9))
   (pad "MP5" thru_hole circle (at 7.62 1.27) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid 30df8f75-6588-4a3c-b906-01e7a5392801))
   (pad "MP6" thru_hole circle (at 7.62 3.81) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (uuid a7643dbd-544b-4402-8ddf-211c4d3d3854))
