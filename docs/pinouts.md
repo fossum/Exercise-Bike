@@ -42,9 +42,9 @@ the pin-socket with the notches facing you.
 | `GPIO 2` | `POT_PIN` | Resistance Potentiometer | Wiper (ADC1) | `INPUT` (12-bit ADC) | 3.3V max (power pot from 3V3, not 5V); safe range 400–3000 raw ADC |
 | `GPIO 5` | `ENC_PIN_B` | Rotary Encoder | Phase B (`DT`) | `INPUT_PULLUP` | Hardware interrupt (`CHANGE`) |
 | `GPIO 6` | `ENC_PIN_A` | Rotary Encoder | Phase A (`CLK`) | `INPUT_PULLUP` | Hardware interrupt (`CHANGE`) |
-| `GPIO 18` | `PIN_AIN2` | Resistance Motor Driver | `AIN2` | `OUTPUT` | Active `HIGH` for Reverse (decreases Pot ADC) |
-| `GPIO 19` | `PIN_AIN1` | Resistance Motor Driver | `AIN1` | `OUTPUT` | Active `HIGH` for Forward (increases Pot ADC) |
-| `GPIO 20` | `PIN_PWM` | Resistance Motor Driver | `PWM` | `OUTPUT` | 8-bit PWM speed control (currently set to 80% speed) |
+| `GPIO 19` | `PIN_AIN2` | Resistance Motor Driver | `AIN2` | `OUTPUT` | Active `HIGH` for Reverse (decreases Pot ADC) |
+| `GPIO 20` | `PIN_AIN1` | Resistance Motor Driver | `AIN1` | `OUTPUT` | Active `HIGH` for Forward (increases Pot ADC) |
+| `GPIO 21` | `PIN_PWM` | Resistance Motor Driver | `PWM` | `OUTPUT` | 8-bit PWM speed control (currently set to 80% speed) |
 | `GPIO 4` | `CADENCE_PIN` | Cadence Sensor | Reed Switch Pulse | INPUT_PULLUP | Hardware interrupt (FALLING) to GND; debounce in code to compute RPM. |
 | `GPIO 7` | `PIN_STBY` | Resistance Motor Driver | Standby | OUTPUT | Drive HIGH (3.3V) to enable H-bridge; LOW (0V) to standby when idle. |
 
@@ -56,7 +56,7 @@ the pin-socket with the notches facing you.
 
 | Signal | ESP32-C6 Pin | Configuration |
 | --- | --- | --- |
-| Wiper (Analog Output) | `GPIO 4` (`POT_PIN`) | `INPUT`, 12-bit ADC (`0`–`4095`), 16-sample average, `0 ms` sample delay |
+| Wiper (Analog Output) | `GPIO 2` (`POT_PIN`) | `INPUT`, 12-bit ADC (`0`–`4095`), 16-sample average, `0 ms` sample delay |
 
 ---
 
@@ -64,16 +64,16 @@ the pin-socket with the notches facing you.
 
 | Signal | ESP32-C6 Pin | Configuration |
 | --- | --- | --- |
-| `AIN1` | `GPIO 19` (`PIN_AIN1`) | `OUTPUT` |
-| `AIN2` | `GPIO 18` (`PIN_AIN2`) | `OUTPUT` |
+| `AIN1` | `GPIO 20` (`PIN_AIN1`) | `OUTPUT` |
+| `AIN2` | `GPIO 19` (`PIN_AIN2`) | `OUTPUT` |
 | `STBY` *(optional)* | `GPIO 7` (`PIN_STBY`) | `OUTPUT` (`HIGH` when running, `LOW` when stopped/idle) |
-| `PWM` *(optional)* | `GPIO 20` (`PIN_PWM`) | `OUTPUT` (8-bit resolution, 80% speed) |
+| `PWM` *(optional)* | `GPIO 21` (`PIN_PWM`) | `OUTPUT` (8-bit resolution, 80% speed) |
 
 **Direction Logic:**
 
 `PIN_AIN1` and `PIN_AIN2` are assigned so that `Forward` increases the potentiometer ADC reading and `Reverse` decreases it:
 
-| Mode | Serial Command | `PIN_AIN1` (`GPIO 19`) | `PIN_AIN2` (`GPIO 18`) | `PIN_STBY` (`GPIO 7`) | Effect |
+| Mode | Serial Command | `PIN_AIN1` (`GPIO 20`) | `PIN_AIN2` (`GPIO 19`) | `PIN_STBY` (`GPIO 7`) | Effect |
 | --- | --- | --- | --- | --- | --- |
 | `Forward` | `'f'` | `HIGH` | `LOW` | `HIGH` | Increases Pot ADC (higher resistance) |
 | `Reverse` | `'r'` | `LOW` | `HIGH` | `HIGH` | Decreases Pot ADC (lower resistance) |
