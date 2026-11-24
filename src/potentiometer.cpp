@@ -122,5 +122,5 @@ int Potentiometer::getMaxAdcValue() const {
 void Potentiometer::setHardwareReaders(AdcReadFn rawReader, AdcReadFn mvReader, DelayFn delayFn) {
   rawReader_ = rawReader ? rawReader : defaultReadRaw;
   mvReader_ = mvReader ? mvReader : defaultReadMilliVolts;
-  delayFn_ = delayFn;
+  delayFn_ = delayFn ? delayFn : defaultDelay;
 }

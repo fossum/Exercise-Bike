@@ -34,7 +34,7 @@ public:
 
     void begin();
 
-    // Returns true if the level changed since the last call to consumeChange()
+    // Returns true if the level changed since the last call to hasChanged()
     bool hasChanged();
 
     // Returns the current resistance level (clamped between minLevel and maxLevel)

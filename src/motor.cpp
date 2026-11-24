@@ -32,11 +32,13 @@ void defaultPinMode(uint8_t pin, uint8_t mode) {
 Motor::Motor(uint8_t ain1Pin,
              uint8_t ain2Pin,
              int pwmPin,
-             uint8_t pwmResolutionBits)
+             uint8_t pwmResolutionBits,
+             int standbyPin)
     : ain1Pin_(ain1Pin),
       ain2Pin_(ain2Pin),
       pwmPin_(pwmPin),
       pwmResolutionBits_(pwmResolutionBits > 0 ? pwmResolutionBits : 8),
+      standbyPin_(standbyPin),
       direction_(MotorDirection::Stopped),
       speedPercent_(0.0f),
       digitalWriter_(defaultDigitalWrite),
@@ -50,14 +52,22 @@ void Motor::begin() {
     if (hasPwmPin()) {
       pinModeFn_(static_cast<uint8_t>(pwmPin_), OUTPUT);
     }
+    if (hasStandbyPin()) {
+      pinModeFn_(static_cast<uint8_t>(standbyPin_), OUTPUT);
+    }
   }
-  stop();
+  direction_ = MotorDirection::Stopped;
+  speedPercent_ = 0.0f;
+  applyOutput();
 }
 
 void Motor::forward(float speedPercent) {
   float clamped = clampPercent(speedPercent);
   if (clamped <= 0.0f) {
     stop();
+    return;
+  }
+  if (direction_ == MotorDirection::Forward && speedPercent_ == clamped) {
     return;
   }
   direction_ = MotorDirection::Forward;
@@ -71,12 +81,18 @@ void Motor::reverse(float speedPercent) {
     stop();
     return;
   }
+  if (direction_ == MotorDirection::Reverse && speedPercent_ == clamped) {
+    return;
+  }
   direction_ = MotorDirection::Reverse;
   speedPercent_ = clamped;
   applyOutput();
 }
 
 void Motor::stop() {
+  if (direction_ == MotorDirection::Stopped && speedPercent_ == 0.0f) {
+    return;
+  }
   direction_ = MotorDirection::Stopped;
   speedPercent_ = 0.0f;
   applyOutput();
@@ -86,6 +102,9 @@ void Motor::setSpeedPercent(float speedPercent) {
   float clamped = clampPercent(speedPercent);
   if (clamped <= 0.0f || direction_ == MotorDirection::Stopped) {
     stop();
+    return;
+  }
+  if (speedPercent_ == clamped) {
     return;
   }
   speedPercent_ = clamped;
@@ -157,6 +176,18 @@ bool Motor::hasPwmPin() const {
   return pwmPin_ >= 0;
 }
 
+int Motor::getStandbyPin() const {
+  return standbyPin_;
+}
+
+bool Motor::hasStandbyPin() const {
+  return standbyPin_ >= 0;
+}
+
+bool Motor::isInStandby() const {
+  return hasStandbyPin() && !isRunning();
+}
+
 void Motor::setHardwareWriters(DigitalWriteFn digitalWriter,
                                AnalogWriteFn analogWriter,
                                PinModeFn pinModeFn) {
@@ -177,13 +208,33 @@ void Motor::applyOutput() {
     ain2Val = HIGH;
   }
 
+  if (!isRunning() && hasStandbyPin() && digitalWriter_) {
+    digitalWriter_(static_cast<uint8_t>(standbyPin_), LOW);
+  }
+
   if (digitalWriter_) {
-    digitalWriter_(ain1Pin_, ain1Val);
-    digitalWriter_(ain2Pin_, ain2Val);
+    // Write LOW pins before HIGH pins so Reverse -> Forward transitions never
+    // pass through the (HIGH, HIGH) short-brake state on the H-bridge.
+    if (ain1Val == LOW) {
+      digitalWriter_(ain1Pin_, LOW);
+    }
+    if (ain2Val == LOW) {
+      digitalWriter_(ain2Pin_, LOW);
+    }
+    if (ain1Val == HIGH) {
+      digitalWriter_(ain1Pin_, HIGH);
+    }
+    if (ain2Val == HIGH) {
+      digitalWriter_(ain2Pin_, HIGH);
+    }
   }
 
   if (hasPwmPin() && analogWriter_) {
     analogWriter_(static_cast<uint8_t>(pwmPin_), getPwmValue());
+  }
+
+  if (isRunning() && hasStandbyPin() && digitalWriter_) {
+    digitalWriter_(static_cast<uint8_t>(standbyPin_), HIGH);
   }
 }
 

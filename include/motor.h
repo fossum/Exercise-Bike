@@ -29,11 +29,13 @@ public:
   using PinModeFn = void (*)(uint8_t pin, uint8_t mode);
 
   static constexpr int kNoPwmPin = -1;
+  static constexpr int kNoStandbyPin = -1;
 
   Motor(uint8_t ain1Pin,
         uint8_t ain2Pin,
         int pwmPin = kNoPwmPin,
-        uint8_t pwmResolutionBits = 8);
+        uint8_t pwmResolutionBits = 8,
+        int standbyPin = kNoStandbyPin);
 
   void begin();
 
@@ -57,6 +59,9 @@ public:
   uint8_t getAin2Pin() const;
   int getPwmPin() const;
   bool hasPwmPin() const;
+  int getStandbyPin() const;
+  bool hasStandbyPin() const;
+  bool isInStandby() const;
 
   void setHardwareWriters(DigitalWriteFn digitalWriter,
                           AnalogWriteFn analogWriter = nullptr,
@@ -70,6 +75,7 @@ private:
   uint8_t ain2Pin_;
   int pwmPin_;
   uint8_t pwmResolutionBits_;
+  int standbyPin_;
   MotorDirection direction_;
   float speedPercent_;
   DigitalWriteFn digitalWriter_;

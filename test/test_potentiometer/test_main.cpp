@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #endif
 #include <unity.h>
+#include "pins.h"
 #include "potentiometer.h"
 
 namespace {
@@ -89,12 +90,12 @@ void test_potentiometer_averaging_and_delays(void) {
   mockMvSequence[2] = 820;
   mockMvSequence[3] = 830;
 
-  Potentiometer pot(4, 4, 3, 0, 4000, 12);
+  Potentiometer pot(POT_PIN, 4, 3, 0, 4000, 12);
   pot.setHardwareReaders(mockReadRaw, mockReadMv, mockDelay);
 
   PotentiometerReading reading = pot.read();
 
-  TEST_ASSERT_EQUAL_UINT8(4, lastReadPin);
+  TEST_ASSERT_EQUAL_UINT8(POT_PIN, lastReadPin);
   TEST_ASSERT_EQUAL_INT(1015, reading.getRaw());
   TEST_ASSERT_EQUAL_INT(815, reading.getMilliVolts());
   TEST_ASSERT_EQUAL_INT(4, delayCallCount);
@@ -107,7 +108,7 @@ void test_potentiometer_calibration_update(void) {
   mockRawSequence[0] = 1500;
   mockMvSequence[0] = 1200;
 
-  Potentiometer pot(4, 1, 0, 0, 4095, 12);
+  Potentiometer pot(POT_PIN, 1, 0, 0, 4095, 12);
   pot.setHardwareReaders(mockReadRaw, mockReadMv, mockDelay);
   pot.setCalibration(1000, 2000);
 
@@ -117,11 +118,18 @@ void test_potentiometer_calibration_update(void) {
   PotentiometerReading reading = pot.read();
   TEST_ASSERT_FLOAT_WITHIN(0.001f, 0.5f, reading.getNormalized());
   TEST_ASSERT_FLOAT_WITHIN(0.01f, 50.0f, reading.getPercent());
+  TEST_ASSERT_EQUAL_INT(0, delayCallCount);
+
+  // Non-positive sample count (<= 0) coerces to 1 sample without divide-by-zero
+  Potentiometer zeroSamplePot(POT_PIN, 0, 5, 0, 4095, 12);
+  zeroSamplePot.setHardwareReaders(mockReadRaw, mockReadMv); // default nullptr delayFn falls back safely
+  PotentiometerReading singleReading = zeroSamplePot.read();
+  TEST_ASSERT_EQUAL_INT(1500, singleReading.getRaw());
 }
 
 #ifdef ARDUINO
 void test_hardware_live_adc_read(void) {
-  Potentiometer pot(4, 8, 1, 0, 4095, 12);
+  Potentiometer pot(POT_PIN, 8, 1, 0, 4095, 12);
   pot.begin();
   PotentiometerReading reading = pot.read();
 
