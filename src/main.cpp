@@ -1,22 +1,13 @@
 #ifdef ARDUINO
 #include <Arduino.h>
+#include "pins.h"
 #include "potentiometer.h"
 #include "motor.h"
 #include "rotary_encoder.h"
 
 #ifndef PIO_UNIT_TESTING
 
-const uint8_t POT_PIN  = 2;  // Working potentiometer ADC pin
-const uint8_t PIN_AIN1 = 20; // Swapped so Forward ('f') increases Pot ADC
-const uint8_t PIN_AIN2 = 19; // and Reverse ('r') decreases Pot ADC
-const uint8_t PIN_PWM  = 21; // H-bridge PWM speed control pin
-const uint8_t PIN_STBY = 7;  // H-bridge standby pin (HIGH = enabled, LOW = standby)
 const float MOTOR_SPEED_PERCENT = 80.0f;
-
-// Safe GPIO pins on ESP32-C6 (avoid GPIO 8 which is onboard RGB LED)
-const uint8_t ENC_PIN_A  = 6;
-const uint8_t ENC_PIN_B  = 5;
-const int ENC_PIN_SW = -1; // Set to a GPIO pin if using the push button
 
 // Safe software end-stops so the motor never binds at the ends of the pot
 const int MIN_SAFE_ADC = 400;

@@ -56,13 +56,18 @@ void Motor::begin() {
       pinModeFn_(static_cast<uint8_t>(standbyPin_), OUTPUT);
     }
   }
-  stop();
+  direction_ = MotorDirection::Stopped;
+  speedPercent_ = 0.0f;
+  applyOutput();
 }
 
 void Motor::forward(float speedPercent) {
   float clamped = clampPercent(speedPercent);
   if (clamped <= 0.0f) {
     stop();
+    return;
+  }
+  if (direction_ == MotorDirection::Forward && speedPercent_ == clamped) {
     return;
   }
   direction_ = MotorDirection::Forward;
@@ -76,12 +81,18 @@ void Motor::reverse(float speedPercent) {
     stop();
     return;
   }
+  if (direction_ == MotorDirection::Reverse && speedPercent_ == clamped) {
+    return;
+  }
   direction_ = MotorDirection::Reverse;
   speedPercent_ = clamped;
   applyOutput();
 }
 
 void Motor::stop() {
+  if (direction_ == MotorDirection::Stopped && speedPercent_ == 0.0f) {
+    return;
+  }
   direction_ = MotorDirection::Stopped;
   speedPercent_ = 0.0f;
   applyOutput();
@@ -91,6 +102,9 @@ void Motor::setSpeedPercent(float speedPercent) {
   float clamped = clampPercent(speedPercent);
   if (clamped <= 0.0f || direction_ == MotorDirection::Stopped) {
     stop();
+    return;
+  }
+  if (speedPercent_ == clamped) {
     return;
   }
   speedPercent_ = clamped;
