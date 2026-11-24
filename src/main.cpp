@@ -70,7 +70,16 @@ void loop() {
         }
     }
 
-    // 3. Closed-loop position control when in automatic (encoder) mode
+    // 3. Hard safety cutoff near the ends of the potentiometer track
+    if (motor.getDirection() == MotorDirection::Forward && adc >= MAX_SAFE_ADC) {
+        Serial.println("Reached MAX safe limit! Stopping.");
+        motor.stop();
+    } else if (motor.getDirection() == MotorDirection::Reverse && adc <= MIN_SAFE_ADC) {
+        Serial.println("Reached MIN safe limit! Stopping.");
+        motor.stop();
+    }
+
+    // 4. Closed-loop position control when in automatic (encoder) mode
     if (autoControlEnabled) {
         int error = targetADC - adc;
         if (abs(error) <= ADC_DEADBAND) {
@@ -82,15 +91,6 @@ void loop() {
         } else {
             motor.stop();
         }
-    }
-
-    // 4. Hard safety cutoff near the ends of the potentiometer track
-    if (motor.getDirection() == MotorDirection::Forward && adc >= MAX_SAFE_ADC) {
-        Serial.println("Reached MAX safe limit! Stopping.");
-        motor.stop();
-    } else if (motor.getDirection() == MotorDirection::Reverse && adc <= MIN_SAFE_ADC) {
-        Serial.println("Reached MIN safe limit! Stopping.");
-        motor.stop();
     }
 
     // 5. Periodic status print (every 200ms) while running a fast 10ms control loop
