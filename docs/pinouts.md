@@ -39,7 +39,7 @@ the pin-socket with the notches facing you.
 
 | GPIO | Code Constant | Device / Subsystem | Signal / Function | Mode | Notes |
 | --- | --- | --- | --- | --- | --- |
-| `GPIO 2` | `POT_PIN` | Resistance Potentiometer | Wiper (ADC1) | `INPUT` (12-bit ADC) | 3.3V max (power pot from 3V3, not 5V); safe range 400–3000 raw ADC |
+| `GPIO 2` | `POT_PIN` | Resistance Potentiometer | Wiper (ADC1) | `INPUT` (12-bit ADC) | 3.3V max (power pot from 3V3, not 5V); safe range 400–1920 raw ADC |
 | `GPIO 4` | `CADENCE_PIN` | Cadence Sensor *(planned)* | Reed Switch Pulse | `INPUT_PULLUP` | Defined in `include/pins.h`; hardware interrupt (`FALLING`) to GND; debounce in code to compute RPM |
 | `GPIO 5` | `ENC_PIN_B` | Rotary Encoder | Phase B (`DT`) | `INPUT_PULLUP` | Hardware interrupt (`CHANGE`) |
 | `GPIO 6` | `ENC_PIN_A` | Rotary Encoder | Phase A (`CLK`) | `INPUT_PULLUP` | Hardware interrupt (`CHANGE`) |

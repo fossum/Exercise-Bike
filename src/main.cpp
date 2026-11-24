@@ -11,7 +11,7 @@ const float MOTOR_SPEED_PERCENT = 80.0f;
 
 // Safe software end-stops so the motor never binds at the ends of the pot
 const int MIN_SAFE_ADC = 400;
-const int MAX_SAFE_ADC = 3000;
+const int MAX_SAFE_ADC = 1920;
 const int ADC_DEADBAND = 25; // Tolerance window to prevent motor hunting/oscillation
 
 Motor motor(PIN_AIN1, PIN_AIN2, PIN_PWM, 8, PIN_STBY);
