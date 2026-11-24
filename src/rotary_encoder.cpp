@@ -109,13 +109,13 @@ bool RotaryEncoder::wasButtonPressed() {
 #ifdef ARDUINO
     bool reading = digitalRead(_pinSW);
     uint32_t now = millis();
+    bool pressed = (reading == LOW && _lastButtonState == HIGH && (now - _lastButtonPressMs > 200));
 
-    if (reading == LOW && _lastButtonState == HIGH && (now - _lastButtonPressMs > 200)) {
+    _lastButtonState = reading;
+
+    if (pressed) {
         _lastButtonPressMs = now;
-        _lastButtonState = LOW;
         return true;
-    } else if (reading == HIGH) {
-        _lastButtonState = HIGH;
     }
 #endif
     return false;
